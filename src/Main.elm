@@ -1,6 +1,7 @@
 import Browser
-import Html exposing ( Attribute, Html, div, text, img )
+import Html exposing ( Attribute, Html, div, text, img, button )
 import Html.Attributes exposing ( style, src )
+import Html.Events exposing ( onClick )
 
 main =
   Browser.sandbox { init = init, update = update, view = view }
@@ -33,18 +34,50 @@ init = Model ( Grid 5 5 ) ( Robot ( 3, 3 ) N )
 -- UPDATE
 
 type Msg 
-  = Basic
+  = OnMove
 
 update : Msg -> Model -> Model
 update msg model =
   case msg of
-    Basic -> model
+    OnMove ->
+      let
+        robot = model.robot
+        position = robot.position
+        positionX = Tuple.first position
+        positionY = Tuple.second position
+      in
+      case model.robot.facing of
+        N -> { model | robot = { robot | position = ( if positionX == 1 then 1 else positionX - 1, positionY ) } }
+        E -> model
+        S -> model
+        W -> model
 
 -- VIEW
 
 view : Model -> Html Msg
 view model =
-  renderGrid model.grid model.robot
+  div
+    [ style "display" "flex" 
+    , style "flex-direction" "column"
+    ]
+    [ renderGrid model.grid model.robot
+    , renderControls OnMove
+    ]
+
+renderControls : msg -> Html msg
+renderControls onMove = 
+  div 
+    [ style "display" "grid"
+    , List.repeat 3 60 |> gridRows
+    , List.repeat 3 60 |> gridColumns 
+    ]
+    [ button 
+      [ gridItemColumn 2
+      , gridItemRow 2
+      , onClick onMove
+      ] [ text "move" ]
+
+    ]
 
 renderGrid : Grid -> Robot -> Html Msg
 renderGrid grid robot =
