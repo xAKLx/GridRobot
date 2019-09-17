@@ -1,6 +1,6 @@
 import Browser
-import Html exposing ( Attribute, Html, div, text )
-import Html.Attributes exposing ( style )
+import Html exposing ( Attribute, Html, div, text, img )
+import Html.Attributes exposing ( style, src )
 
 main =
   Browser.sandbox { init = init, update = update, view = view }
@@ -9,6 +9,7 @@ main =
 
 type alias Model = 
   { grid : Grid
+  , robot: Robot
   }
 
 type alias Grid =
@@ -16,11 +17,18 @@ type alias Grid =
   , columns : Int
   }
 
+type alias Robot =
+  { position: ( Int, Int )
+  , facing: Cardinal
+  }
+
+type Cardinal = N | E | S | W
+
 type GridTemplateDimension = Row | Column
 type BorderType = Solid
 
 init : Model
-init = Model ( Grid 5 5 )
+init = Model ( Grid 5 5 ) ( Robot ( 3, 3 ) N )
 
 -- UPDATE
 
@@ -36,21 +44,56 @@ update msg model =
 
 view : Model -> Html Msg
 view model =
-  renderGrid model.grid
+  renderGrid model.grid model.robot
 
-renderGrid : Grid -> Html Msg
-renderGrid grid =
+renderGrid : Grid -> Robot -> Html Msg
+renderGrid grid robot =
   div 
     [ style "display" "grid"
     , List.repeat grid.rows 50 |> gridRows
     , List.repeat grid.columns 50 |> gridColumns 
     ]
-    ( List.repeat ( grid.rows * grid.columns ) gridCell )
+    ( [ renderRobot robot ] ++ renderGridCells grid )
 
-gridCell : Html Msg
-gridCell =
+renderRobot : Robot -> Html msg
+renderRobot robot =
+  img 
+    [ src "assets/Robot.png"
+    , Tuple.first robot.position |> gridItemRow
+    , Tuple.second robot.position |> gridItemColumn
+    , style "align-self" "center"
+    , style "justify-self" "center"
+    , style "width" "35px"
+    ] []
+
+renderGridCells : Grid -> List ( Html msg )
+renderGridCells grid =
+  rangeUntil grid.rows
+    |> List.map ( tupleList <| rangeUntil grid.columns ) 
+    |> List.concat
+    |> List.map gridCell
+
+{-| Creates a list of tuples for each member of the list of values
+  provided and the single value
+  tupleList [ 1, 2, 3 ] 1 == [ (1, 1), (1, 2), (1, 3) ]  
+-}
+tupleList : List a -> b -> List ( b, a )
+tupleList values value =
+  List.map (\n -> ( value, n ) ) values
+
+{-| Creates list of integeres with values from 1 to the final number 
+  rangeUntil 3 = [ 1, 2, 3]
+-}
+rangeUntil : Int -> List Int
+rangeUntil finish = 
+  List.range 1 finish 
+
+gridCell : ( Int, Int ) -> Html msg
+gridCell position =
   div
     [ borderStyle 1 Solid "black"
+    , Tuple.first position |> gridItemRow
+    , Tuple.second position |> gridItemColumn
     ] []
 
 {-| Creates a css border style
@@ -89,6 +132,14 @@ gridTemplate dimension sizes =
           Row -> "rows" 
           Column -> "columns" 
       )
+
+gridItemColumn : Int -> Attribute msg
+gridItemColumn position =
+  String.fromInt position |> style "grid-column"
+
+gridItemRow : Int -> Attribute msg
+gridItemRow position =
+  String.fromInt position |> style "grid-row"
 
 {-| Convert an integer into a String with pixel unit (px)
 
