@@ -4,7 +4,7 @@ import Html.Attributes exposing ( style )
 
 import Control exposing ( renderControls )
 import Grid exposing ( Grid, renderGrid )
-import Plane2d exposing ( Cardinal(..) )
+import Plane2d exposing ( Cardinal(..), Position )
 import Robot exposing ( Robot, renderRobot, updateRobotPosition )
 
 main = Browser.sandbox { init = init, update = update, view = view }
@@ -17,7 +17,7 @@ type alias Model =
   }
 
 init : Model
-init = Model ( Grid 5 5 ) ( Robot ( 3, 3 ) N )
+init = Model ( Grid 5 5 ) ( Robot ( Position 3 3 ) N )
 
 -- UPDATE
 
